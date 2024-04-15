@@ -1,7 +1,7 @@
 using System.Net.Sockets;
 using System.Text;
 
-namespace DurakClient
+namespace Durak.Client
 {
     public partial class Window : Form
     {

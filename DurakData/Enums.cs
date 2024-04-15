@@ -27,8 +27,7 @@
 
     public enum DataType : byte
     {
-        PlayerAttack,
-        PlayerDefend,
+        PlayerSend,
         PlayerDeck,
         AttackDeck,
     }

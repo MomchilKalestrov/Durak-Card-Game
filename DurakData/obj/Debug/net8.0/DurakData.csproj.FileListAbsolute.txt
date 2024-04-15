@@ -9,3 +9,15 @@ C:\Users\mokal\Desktop\Durak\DurakData\obj\Debug\net8.0\DurakData.dll
 C:\Users\mokal\Desktop\Durak\DurakData\obj\Debug\net8.0\refint\DurakData.dll
 C:\Users\mokal\Desktop\Durak\DurakData\obj\Debug\net8.0\DurakData.pdb
 C:\Users\mokal\Desktop\Durak\DurakData\obj\Debug\net8.0\ref\DurakData.dll
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\bin\Debug\net8.0\DurakData.deps.json
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\bin\Debug\net8.0\DurakData.dll
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\bin\Debug\net8.0\DurakData.pdb
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\obj\Debug\net8.0\DurakData.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\obj\Debug\net8.0\DurakData.AssemblyInfoInputs.cache
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\obj\Debug\net8.0\DurakData.AssemblyInfo.cs
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\obj\Debug\net8.0\DurakData.csproj.CoreCompileInputs.cache
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\obj\Debug\net8.0\DurakData.sourcelink.json
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\obj\Debug\net8.0\DurakData.dll
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\obj\Debug\net8.0\refint\DurakData.dll
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\obj\Debug\net8.0\DurakData.pdb
+C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\obj\Debug\net8.0\ref\DurakData.dll

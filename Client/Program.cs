@@ -1,4 +1,4 @@
-namespace DurakClient
+namespace Durak.Client
 {
     internal static class Program
     {

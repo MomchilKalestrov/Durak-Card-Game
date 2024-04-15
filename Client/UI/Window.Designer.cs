@@ -1,4 +1,4 @@
-﻿namespace DurakClient
+﻿namespace Durak.Client
 {
     partial class Window
     {

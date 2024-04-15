@@ -8,7 +8,7 @@ namespace Durak.Players;
 public struct Players
 {
     public Stack<Card> Cards = new Stack<Card>(52);
-    public List<Card> AttackingCards = new List<Card>(50); // -1 the minimum player ammount and -1 for the trump card.
+    public List<Card> AttackingCards = new List<Card>(52);
     public readonly Symbols Trump;
 
     public byte playerTurn = 0;

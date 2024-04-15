@@ -1,40 +1,79 @@
-﻿using DurakClient.Cards;
+﻿using Durak.Data;
 using Microsoft.VisualBasic.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using Durak.Client.UI;
 using System.Text;
 
-namespace DurakClient
+namespace Durak.Client
 {
     partial class Window
     {
         Socket socket;
-        PictureBox[] cardControls = Enumerable.Range(0, 52)
-                         .Select(_ => new PictureBox())
-                         .ToArray();
+        CardControl[] playerCards;
+        CardControl[] attackCards;
+
+        void CardSelected(object sender, EventArgs e)
+        {
+            socket.Send(Packet.EncodePacket(new PacketData()
+            {
+                Type = DataType.PlayerSend,
+                Length = 1,
+                Cards = [((CardControl)sender).Card]
+            }));
+        }
 
         void LoadAttackDeck(Card[] cards)
         {
+            Log("Loading player cards");
+            if (attackCards != null)
+                for (byte i = 0; i < attackCards.Length; ++i)
+                    attackCards[i].Dispose();
+            attackCards = new CardControl[cards.Length];
+            for (int i = 0; i < attackCards.Length; ++i)
+            {
+                attackCards[i] = new CardControl();
+                attackCards[i].Size = new Size(50, 70);
+                attackCards[i].Location = new Point
+                (
+                    (int)(55 * i + Navigation.Panel2.Width / 2 - 27.5 * cards.Length + 2.5),
+                    Navigation.Size.Height / 2 - 37
+                );
+                attackCards[i].Image = new Bitmap(@".\Textures\" + cards[i].Rank.ToString() + "_of_" + cards[i].Symbol.ToString() + ".png");
+                Navigation.Invoke((MethodInvoker)delegate
+                {
+                    Navigation.Panel2.Controls.Add(attackCards[i]);
+                });
+            }
 
         }
 
         void LoadPlayerCards(Card[] cards)
         {
             Log("Loading player cards");
-            cardControls = new PictureBox[cards.Length];
-            for (int i = 0; i < cardControls.Length; ++i)
+            if (playerCards != null)
+                for (byte i = 0; i < playerCards.Length; ++i)
+                    playerCards[i].Dispose();
+            playerCards = new CardControl[cards.Length];
+            for (byte i = 0; i < playerCards.Length; ++i)
             {
-                cardControls[i] = new PictureBox();
-                cardControls[i].Size = new Size(50, 70);
-                cardControls[i].Location = new Point((int)(55 * i + Navigation.Panel2.Width / 2 - 27.5 * cards.Length + 2.5), Navigation.Size.Height - 74);
-                cardControls[i].Anchor = AnchorStyles.Bottom;
-                cardControls[i].Image = new Bitmap(@".\Textures\" + cards[i].Rank.ToString() + "_of_" + cards[i].Symbol.ToString() + ".png");
+                playerCards[i] = new CardControl();
+                playerCards[i].Card = cards[i];
+                playerCards[i].Size = new Size(50, 70);
+                playerCards[i].Location = new Point
+                (
+                    (int)(55 * i + Navigation.Panel2.Width / 2 - 27.5 * cards.Length + 2.5),
+                    Navigation.Size.Height - 74
+                );
+                playerCards[i].Anchor = AnchorStyles.Bottom;
+                playerCards[i].Image = new Bitmap(@".\Textures\" + cards[i].Rank.ToString() + "_of_" + cards[i].Symbol.ToString() + ".png");
                 Navigation.Invoke((MethodInvoker)delegate
                 {
-                    Navigation.Panel2.Controls.Add(cardControls[i]);
+                    Navigation.Panel2.Controls.Add(playerCards[i]);
                 });
+                playerCards[i].Click += new EventHandler(CardSelected);
             }
         }
 

@@ -5,13 +5,13 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Durak.Data;
+using System.Linq;
 
 namespace Durak.Server;
 
 class Server
 {
-    Dictionary<byte, Socket> serverUsers = new Dictionary<byte, Socket>();
-    Socket socket;
+    List<Socket> serverUsers = new List<Socket>();
     bool acceptConnections = true;
 
     byte usersCounter = 0;
@@ -23,7 +23,7 @@ class Server
     }
 
     // Handler for when the client sends data
-    async void HandleRecieveFromClient()
+    async void HandleRecieveFromClient(Socket socket)
     {
         while (true)
         {
@@ -31,6 +31,16 @@ class Server
             int bytesRead = socket.Receive(buffer);
             if (bytesRead <= 0) continue;
             PacketData packetData = Packet.DecodePacket(buffer);
+            switch(packetData.Type)
+            {
+                case DataType.PlayerSend:
+                    byte playerIndex = 0;
+                    for(byte i = 0; i < serverUsers.Count; ++i)
+                        if (serverUsers[i] == socket)
+                            playerIndex = i;
+                    if(playerIndex == playerData.playerTurn - 1)
+                    break;
+            }
         }
     }
 
@@ -65,12 +75,12 @@ class Server
 
         while (acceptConnections)
         {
-            socket = listener.Accept();
+            Socket socket = listener.Accept();
             Console.WriteLine("Client connected: " + socket.RemoteEndPoint.ToString());
-            if (!serverUsers.ContainsValue(socket))
+            if (!serverUsers.Contains(socket))
                 serverUsers[usersCounter++] = socket;
 
-            Task.Run(HandleRecieveFromClient);
+            Task.Run(() => HandleRecieveFromClient(socket));
         }
     }
 
