@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Durak.Data;
-using System.Linq;
 
 namespace Durak.Server;
 
@@ -33,13 +31,7 @@ class Server
             PacketData packetData = Packet.DecodePacket(buffer);
             switch(packetData.Type)
             {
-                case DataType.PlayerSend:
-                    byte playerIndex = 0;
-                    for(byte i = 0; i < serverUsers.Count; ++i)
-                        if (serverUsers[i] == socket)
-                            playerIndex = i;
-                    if(playerIndex == playerData.playerTurn - 1)
-                    break;
+                case
             }
         }
     }
