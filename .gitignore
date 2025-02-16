@@ -1,8 +1,14 @@
 /.filenesting.json
 /.vs
+
 /Client/bin
 /Client/obj
 /Client/*.user
+
 /Server/bin
 /Server/obj
 /Server/*.user
+
+/DurakData/bin
+/DurakData/obj
+/DurakData/*.user
