@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "68DS88tDdAWVfn5qb4YtrPIoCHwRA0QqamZ6Cuj2kVwimDpxNU97glf4VmUKIpSYiPwm3ycXTKo+c+PaSrEFIQ==",
+  "dgSpecHash": "GtOkt9+REGY=",
   "success": true,
-  "projectFilePath": "C:\\Users\\mokal\\Desktop\\Durak\\Durak-Card-Game\\Client\\DurakClient.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "/home/momchil/Durak-Card-Game/Client/DurakClient.csproj",
+  "expectedPackageFiles": [
+    "/home/momchil/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.13/microsoft.windowsdesktop.app.ref.8.0.13.nupkg.sha512"
+  ],
   "logs": []
 }

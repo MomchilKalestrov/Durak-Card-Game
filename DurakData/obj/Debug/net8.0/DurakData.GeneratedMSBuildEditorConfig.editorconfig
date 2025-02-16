@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = DurakData
-build_property.ProjectDir = C:\Users\mokal\Desktop\Durak\Durak-Card-Game\DurakData\
+build_property.ProjectDir = /home/momchil/Durak-Card-Game/DurakData/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

@@ -1,27 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\mokal\\Desktop\\Durak\\Durak-Card-Game\\DurakData\\DurakData.csproj": {}
+    "/home/momchil/Durak-Card-Game/DurakData/DurakData.csproj": {}
   },
   "projects": {
-    "C:\\Users\\mokal\\Desktop\\Durak\\Durak-Card-Game\\DurakData\\DurakData.csproj": {
+    "/home/momchil/Durak-Card-Game/DurakData/DurakData.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\mokal\\Desktop\\Durak\\Durak-Card-Game\\DurakData\\DurakData.csproj",
+        "projectUniqueName": "/home/momchil/Durak-Card-Game/DurakData/DurakData.csproj",
         "projectName": "DurakData",
-        "projectPath": "C:\\Users\\mokal\\Desktop\\Durak\\Durak-Card-Game\\DurakData\\DurakData.csproj",
-        "packagesPath": "C:\\Users\\mokal\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\mokal\\Desktop\\Durak\\Durak-Card-Game\\DurakData\\obj\\",
+        "projectPath": "/home/momchil/Durak-Card-Game/DurakData/DurakData.csproj",
+        "packagesPath": "/home/momchil/.nuget/packages/",
+        "outputPath": "/home/momchil/Durak-Card-Game/DurakData/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\mokal\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/momchil/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -60,7 +58,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.200/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/momchil/.dotnet/sdk/8.0.406/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

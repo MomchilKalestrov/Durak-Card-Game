@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "/vnv02JMNkicipwISYyatKcW+7xtyc94o8h8zjM8jrbQDUJhuxKrK1tgo4Z7VbCkxtkUrFXYro7OjvPoANLvZA==",
+  "dgSpecHash": "i+CzQSM5gao=",
   "success": true,
-  "projectFilePath": "C:\\Users\\mokal\\Desktop\\Durak\\Durak-Card-Game\\Server\\DurakServer.csproj",
+  "projectFilePath": "/home/momchil/Durak-Card-Game/Server/DurakServer.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }
