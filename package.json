@@ -1,0 +1,28 @@
+{
+  "name": "durak-card-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MomchilKalestrov/Durak-Card-Game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MomchilKalestrov/Durak-Card-Game/issues"
+  },
+  "homepage": "https://github.com/MomchilKalestrov/Durak-Card-Game#readme",
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "@types/ws": "^8.5.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3",
+    "ws": "^8.18.0"
+  }
+}
