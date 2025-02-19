@@ -29,9 +29,7 @@ const attackIncludesValue = (cards: attackDefencePair[], value: cardValue): bool
 
 const hasEnoughCards = (attack: attackDefencePair[], playerDeck: card[]): boolean => {
     const defendedCards = attack.filter((card: attackDefencePair) => card.defence);
-    const truePlayerDeckCount = playerDeck.length - defendedCards.length;
-    const undefendedCardsCount = attack.length - defendedCards.length;
-    return truePlayerDeckCount > undefendedCardsCount;
+    return playerDeck.length > attack.length - defendedCards.length;
 };
 
 const isValidDefence = (attack: card, defence: card, trump: cardSuit): boolean => {
@@ -146,7 +144,7 @@ class Session {
                 this.currentAttack[ i ].attack.suit === pair.attack.suit &&
                 this.currentAttack[ i ].attack.value === pair.attack.value
             ) {
-                this.currentAttack[i].defence = pair.defence;
+                this.currentAttack[ i ].defence = pair.defence;
                 this.players[ playerIndex ].cards =
                     this
                         .players[ playerIndex ]
