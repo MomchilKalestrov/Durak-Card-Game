@@ -1,11 +1,11 @@
+.card {
+    width: 5rem;
+}
+
 .attackDefencePair {
     --top-offset: 2rem;
     position: relative;
     padding-bottom: var(--top-offset);
-}
-
-.attackDefencePair img {
-    width: 5rem;
 }
 
 .attackDefencePair *:nth-child(2) {

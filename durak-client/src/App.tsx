@@ -61,8 +61,8 @@ const App: React.FC = () => {
                         {
                             attack && attack.map(({ attack, defence }) => (
                                 <div className='attackDefencePair' key={ attack.suit + attack.value }>
-                                    <img src={ getCardUrl(attack) } onClick={ () => defend(attack) } />
-                                    { defence && <img src={ getCardUrl(defence) } /> }
+                                    <img className='card' src={ getCardUrl(attack) } onClick={ () => defend(attack) } />
+                                    { defence && <img className='card' src={ getCardUrl(defence) } /> }
                                 </div>
                             ))
                         }
@@ -75,6 +75,7 @@ const App: React.FC = () => {
                         {
                             hand && hand.map((card) => (
                                 <img
+                                    className='card'
                                     key={ card.suit + card.value }
                                     src={ getCardUrl(card) }
                                     style={

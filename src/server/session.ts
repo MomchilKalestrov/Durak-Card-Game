@@ -13,6 +13,9 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
+const compareCards = (c1?: card, c2?: card) =>
+    c1 && c2 && c1.suit === c2.suit && c1.value === c2.value;
+
 // check if the attack includes a suit
 const attackIncludesValue = (cards: attackDefencePair[], value: cardValue): boolean => {
     for (let i: number = 0; i < cards.length; i++)
@@ -102,16 +105,13 @@ class Session {
         const defenderIndex = (this.currentAttacker  + 1) % this.players.length;
         // check if the player is the defender
         // if they aren't, they cannot defend
-        console.log(defenderIndex !== playerIndex);
         if (defenderIndex !== playerIndex)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if they provided a defence card
-        console.log(!pair.defence);
         if (!pair.defence)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the player has yielded/passed
         // if they have, they cannot defend
-        console.log(this.players[ playerIndex ].pass)
         if (this.players[ playerIndex ].pass)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the player has the card 
@@ -123,11 +123,23 @@ class Session {
                     .some((card: card) => card.suit === pair.defence?.suit && card.value === pair.defence?.value)
         )
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid' }));
+        // check if the attack card is already defended
+        if (
+            this
+                .currentAttack
+                .some((p: attackDefencePair) => {
+                    if (compareCards(p.attack, pair.attack))
+                        return p.defence;
+                    return false;
+                })
+        )
+            return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid' }));
         // check if the card is a valid defence
         // if it isn't, ignore it
         if (!isValidDefence(pair.attack, pair.defence, this.trump))
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid' }));
         // if it is, update the current defence
+        // only if the card is in the ACTUAL attack
         for (let i: number = 0; i < this.currentAttack.length; i++)
             if (
                 this.currentAttack[ i ].attack.suit === pair.attack.suit &&
