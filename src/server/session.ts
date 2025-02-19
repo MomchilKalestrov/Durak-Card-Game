@@ -5,7 +5,7 @@ import { IncomingMessage } from 'http';
 import Deck from './deck';
 
 import Player from '../types/player';
-import card, { cardSymbol, attackDefencePair, cardValue } from '../types/card';
+import card, { cardSuit, attackDefencePair, cardValue } from '../types/card';
 import packet from '../types/packet';
 
 const rl = readline.createInterface({
@@ -13,12 +13,12 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-// check if the attack includes a symbol
-const attackIncludesSymbol = (cards: attackDefencePair[], symbol: cardSymbol): boolean => {
+// check if the attack includes a suit
+const attackIncludesValue = (cards: attackDefencePair[], value: cardValue): boolean => {
     for (let i: number = 0; i < cards.length; i++)
         if (
-            cards[i].attack.symbol === symbol ||
-            cards[i].defence?.symbol === symbol
+            cards[i].attack.value === value ||
+            cards[i].defence?.value === value
         )
             return true;
     return false;
@@ -31,11 +31,11 @@ const hasEnoughCards = (attack: attackDefencePair[], playerDeck: card[]): boolea
     return truePlayerDeckCount > undefendedCardsCount;
 };
 
-const isValidDefence = (attack: card, defence: card, trump: cardSymbol): boolean => {
-    const valueToNumber = (symbol: cardValue): number => {
-        const numberValue = parseInt(symbol);
+const isValidDefence = (attack: card, defence: card, trump: cardSuit): boolean => {
+    const valueToNumber = (suit: cardValue): number => {
+        const numberValue = parseInt(suit);
         if (isNaN(numberValue)) {
-            switch (symbol) {
+            switch (suit) {
                 case 'J': return 11;
                 case 'Q': return 12;
                 case 'K': return 13;
@@ -47,8 +47,8 @@ const isValidDefence = (attack: card, defence: card, trump: cardSymbol): boolean
     const attackValue = valueToNumber(attack.value);
     const defenceValue = valueToNumber(defence.value);
     
-    if (attack.symbol === defence.symbol) return defenceValue > attackValue;
-    if (defence.symbol === trump) return true;
+    if (attack.suit === defence.suit) return defenceValue > attackValue;
+    if (defence.suit === trump) return true;
     return false;
 };
 
@@ -59,7 +59,7 @@ class Session {
     
     deck: Deck = new Deck();
     currentAttack: attackDefencePair[] = [];
-    trump: cardSymbol = 'hearts';
+    trump: cardSuit = 'hearts';
 
     giveCards = () => {
         // gets the cards per player
@@ -78,8 +78,8 @@ class Session {
         // we will reverse the deck first and then see what the trump card is, though
         const lastCardIndex: number = this.deck.cards.length - 1;
         [ this.deck.cards[ 0 ], this.deck.cards[ lastCardIndex] ] = [ this.deck.cards[ lastCardIndex ], this.deck.cards[ 0 ] ];
-        this.trump = this.deck.cards[ 0 ].symbol;
-        this.sendData();
+        this.trump = this.deck.cards[ 0 ].suit;
+        this.sendDataToAll();
     };
 
     addPlayer = (socket: WebSocket, request: IncomingMessage) => {
@@ -95,29 +95,32 @@ class Session {
             case 'defend': this.handleDefence(socket, body.cards, playerIndex); break;
             case 'playerPass': this.handlePass(socket, playerIndex); break;
         };
-        this.sendData();
+        this.sendDataToAll();
     };
 
     handleDefence = (socket: WebSocket, pair: attackDefencePair, playerIndex: number) => {
         const defenderIndex = (this.currentAttacker  + 1) % this.players.length;
         // check if the player is the defender
         // if they aren't, they cannot defend
+        console.log(defenderIndex !== playerIndex);
         if (defenderIndex !== playerIndex)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if they provided a defence card
+        console.log(!pair.defence);
         if (!pair.defence)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the player has yielded/passed
         // if they have, they cannot defend
+        console.log(this.players[ playerIndex ].pass)
         if (this.players[ playerIndex ].pass)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the player has the card 
         // if they don't, they cannot defend with it
         if (
-            this
+            !this
                 .players[ playerIndex ]
                 .cards
-                    .some((card: card) => card.symbol === pair.defence?.symbol && card.value === pair.defence?.value)
+                    .some((card: card) => card.suit === pair.defence?.suit && card.value === pair.defence?.value)
         )
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid' }));
         // check if the card is a valid defence
@@ -127,7 +130,7 @@ class Session {
         // if it is, update the current defence
         for (let i: number = 0; i < this.currentAttack.length; i++)
             if (
-                this.currentAttack[ i ].attack.symbol === pair.attack.symbol &&
+                this.currentAttack[ i ].attack.suit === pair.attack.suit &&
                 this.currentAttack[ i ].attack.value === pair.attack.value
             ) {
                 this.currentAttack[i].defence = pair.defence;
@@ -154,7 +157,7 @@ class Session {
             !this
                 .players[ playerIndex ]
                 .cards
-                    .some((c: card) => card.symbol === c.symbol && card.value === c.value)
+                    .some((c: card) => card.suit === c.suit && card.value === c.value)
         )
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if there are any cards in the current attack
@@ -168,16 +171,15 @@ class Session {
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if there are any attacking cards
         // if there aren't, just accept any card
-        // if there are, check if the card symbol
+        // if there are, check if the card suit
         // is included in the attack.
-        if (this.currentAttack.length === 0 || attackIncludesSymbol(this.currentAttack, card.symbol)) {
+        if (this.currentAttack.length === 0 || attackIncludesValue(this.currentAttack, card.value)) {
             this.currentAttack.push({ attack: card });
             this.players[ playerIndex ].cards =
                 this
                     .players[ playerIndex ]
                     .cards
-                        .filter((c: card) => c.symbol !== card.symbol || c.value !== card.value);
-            
+                        .filter((c: card) => c.suit !== card.suit || c.value !== card.value);
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'success'}));
         };
         // if it isn't, ignore it. 
@@ -237,37 +239,53 @@ class Session {
         this.currentAttacker = (this.currentAttacker + 1) % this.players.length;
     };
 
-    sendData = () =>
-        this.players.forEach((player: Player) => {
-            this.sendDeck(player);
-            this.sendAttack(player);
+    sendDataToAll = () =>
+        this.players.forEach((player: Player, index: number) => {
+            this.sendPlayerData(player, index);
+            this.sendAttackData(player);
+            this.sendSessionData(player);
         });
 
-    sendDeck = (player: Player) =>
+    sendPlayerData = (player: Player, playerIndex: number) =>
         player
         .socket
             .send(
                 JSON.stringify({
-                    type: 'playerDeck',
-                    deck: player.cards
+                    type: 'playerData',
+                    hand: player.cards,
+                    playerIndex
                 })
             );
 
-    sendAttack = (player: Player) =>
+    sendAttackData = (player: Player) =>
         player
         .socket
             .send(
                 JSON.stringify({
                     type: 'currentAttack',
-                    deck: this.currentAttack,
-                    attacker: this.currentAttacker
+                    cards: this.currentAttack,
+                    attackerIndex: this.currentAttacker
+                })
+            );
+
+    sendSessionData = (player: Player) => 
+        player
+        .socket
+            .send(
+                JSON.stringify({
+                    type: 'sessionData',
+                    playerCount: this.players.length,
+                    playerCardCount: this.players.map((player: Player) => player.cards.length),
+                    trump: this.trump
                 })
             );
 
     begin = async () => {
-        rl.question('Session started. Press any key to begin:\n', () => {
+        console.log('Session started. Press any key to begin:');
+        rl.question('', () => {
             console.log('Giving out cards...');
             this.giveCards();
+            console.log('Cards given out.');
         });
     };
 };
