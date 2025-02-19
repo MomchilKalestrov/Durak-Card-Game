@@ -47,9 +47,10 @@ const isValidDefence = (attack: card, defence: card, trump: cardSuit): boolean =
         };
         return numberValue;
     };
+
     const attackValue = valueToNumber(attack.value);
     const defenceValue = valueToNumber(defence.value);
-    
+    console.log(attack, defence, trump)
     if (attack.suit === defence.suit) return defenceValue > attackValue;
     if (defence.suit === trump) return true;
     return false;
@@ -146,6 +147,11 @@ class Session {
                 this.currentAttack[ i ].attack.value === pair.attack.value
             ) {
                 this.currentAttack[i].defence = pair.defence;
+                this.players[ playerIndex ].cards =
+                    this
+                        .players[ playerIndex ]
+                        .cards
+                            .filter((c: card) => c.suit !== pair.defence?.suit || c.value !== pair.defence?.value);
                 return socket.send(JSON.stringify({ type: 'serverResponse', response: 'success'}));
             };
         // if the card isn't in the current attack, ignore it
