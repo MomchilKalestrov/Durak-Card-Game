@@ -6,7 +6,6 @@ const usePlayerData = (socket?: WebSocket) => {
     
     const handleMessage = (event: MessageEvent) => {
         const data = JSON.parse(event.data);
-        console.log(data);
         if (data.type === 'playerData')
             setData(data);
     };

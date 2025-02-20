@@ -1,0 +1,27 @@
+.TrumpBadge {
+    border-radius: 50%;
+
+    width: 2rem;
+    height: 2rem;
+    padding: 0.5rem;
+    background-color: var(--color-primary);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.TrumpBadge p {
+    margin: 0px;
+    font-size: 2rem;
+    line-height: 2rem;
+}
+
+.Red {
+    color: #B71C1C;
+}
+
+.Black {
+    color: #000000;
+}

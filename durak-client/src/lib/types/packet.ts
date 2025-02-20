@@ -1,4 +1,5 @@
 import card, { attackDefencePair, cardSuit } from './card';
+import Player from './player';
 
 type defend = {
     type: 'defend';
@@ -24,8 +25,7 @@ type playerData = {
 
 type sessionData = {
     type: 'sessionData';
-    playerCount: number;
-    playerCardCount: number[];
+    players: Player[];
     trump: cardSuit;
 };
 

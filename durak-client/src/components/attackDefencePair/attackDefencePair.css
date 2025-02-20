@@ -1,0 +1,11 @@
+.AttackDefencePair {
+    --top-offset: 2rem;
+    position: relative;
+    padding-bottom: var(--top-offset);
+}
+
+.AttackDefencePair *:nth-child(2) {
+    position: absolute;
+    top: var(--top-offset);
+    left: 0px;
+}

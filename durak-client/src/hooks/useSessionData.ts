@@ -1,12 +1,11 @@
 import React from 'react';
-import { sessionData } from '@/lib/types/packet';
+import { sessionData } from '../lib/types/packet';
 
 const useSessionData = (socket?: WebSocket) => {
     const [ data, setData ] = React.useState<sessionData | undefined>(undefined);
     
     const handleMessage = (event: MessageEvent) => {
         const data = JSON.parse(event.data);
-        console.log(data);
         if (data.type === 'sessionData')
             setData(data);
     };
@@ -20,7 +19,7 @@ const useSessionData = (socket?: WebSocket) => {
         };
     }, [ socket ]);
 
-    return { playerCount: data?.playerCount, playerCardCount: data?.playerCardCount, trump: data?.trump };
+    return { players: data?.players, trump: data?.trump };
 };
 
 export default useSessionData;

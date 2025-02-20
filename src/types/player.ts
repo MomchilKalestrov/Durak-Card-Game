@@ -6,6 +6,8 @@ interface Player {
     cards: card[];
     socket: WebSocket;
     pass: boolean;
-}
+    name: string;
+    index: number;
+};
 
 export default Player;

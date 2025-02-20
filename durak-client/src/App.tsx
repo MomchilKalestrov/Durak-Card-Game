@@ -4,13 +4,19 @@ import usePlayerData from './hooks/usePlayerData';
 import useAttack from './hooks/useAttack';
 import useSessionData from './hooks/useSessionData';
 
-import getCardUrl from './lib/getCardUrl';
+import Input from './components/input';
+import Button from './components/button';
+import TrumpBadge from './components/trump';
+import AttackDefencePair from './components/attackDefencePair';
 
-import './styles.css';
+import getCardUrl from './lib/getCardUrl';
 import card from './lib/types/card';
 
-const compareCards = (c1: card, c2?: card) =>
-    c2 && c1.suit === c2.suit && c1.value === c2.value;
+import './styles.css';
+import Players from './components/players';
+
+const compareCards = (c1?: card, c2?: card) =>
+    c1 && c2 && c1.suit === c2.suit && c1.value === c2.value;
 
 const App: React.FC = () => {
     const inputRef = React.useRef<HTMLInputElement>(null);
@@ -19,7 +25,7 @@ const App: React.FC = () => {
 
     const { hand, playerIndex } = usePlayerData(socket);
     const { attack, attackerIndex } = useAttack(socket);
-    const { playerCount, trump } = useSessionData(socket);
+    const { players, trump } = useSessionData(socket);
 
     const createConnection = () => {
         const input: string | undefined = inputRef.current?.value;
@@ -34,66 +40,76 @@ const App: React.FC = () => {
     };
 
     const defend = (attack: card) => {
-        console.log('defend', attack, selectedCard);
         if (socket && selectedCard)
             socket.send(JSON.stringify({ type: 'defend', cards: { attack, defence: selectedCard } }));
     };
 
     var isDefender: boolean = false;
-    if (attackerIndex !== undefined && playerCount !== undefined)
-        isDefender = (attackerIndex + 1) % playerCount === playerIndex;
+    if (attackerIndex !== undefined && players?.length !== undefined)
+        isDefender = (attackerIndex + 1) % players?.length === playerIndex;
+
+    if (!isDefender && selectedCard) setSelectedCard(undefined);
 
     return (
-        <div>
-            <input ref={ inputRef } />
-            <button onClick={ createConnection }>Connect</button>
-
-            {
-                !socket || !hand || playerIndex === undefined || attackerIndex === undefined || playerCount === undefined || !trump
-                ? <></>
-                : <>
-                    <h1>You are player number: { playerIndex }</h1>
-                    <h1>Attacker player number: { attackerIndex }</h1>
-                    { isDefender && <h1>You need to defend.</h1> }
-
-                    <div>
-                        <h1>Attack</h1>
+        !socket
+        ?   <div className='ConnectContainer'>
+                <Input ref={ inputRef } type='text' name='Server' />
+                <Button onClick={ createConnection }>Connect</Button>
+            </div>
+        :   <>
+                {
+                    attack &&
+                    <div style={ { display: 'flex', gap: '1rem', flexWrap: 'wrap' } }>
                         {
-                            attack && attack.map(({ attack, defence }) => (
-                                <div className='attackDefencePair' key={ attack.suit + attack.value }>
-                                    <img className='card' src={ getCardUrl(attack) } onClick={ () => defend(attack) } />
-                                    { defence && <img className='card' src={ getCardUrl(defence) } /> }
-                                </div>
-                            ))
-                        }
-                    </div>
-
-                    <h1>Trump suit: { trump }</h1>
-                    
-                    <div>
-                        <h1>Hand</h1>
-                        {
-                            hand && hand.map((card) => (
-                                <img
-                                    className='card'
-                                    key={ card.suit + card.value }
-                                    src={ getCardUrl(card) }
-                                    style={
-                                        compareCards(card, selectedCard) && isDefender
-                                        ?   { border: '2px solid red'}
-                                        :   undefined
-                                    }
-                                    onClick={ isDefender ? () => setSelectedCard(card) : () => addToAttack(card) }
+                            attack.map((pair) => (
+                                <AttackDefencePair
+                                    pair={ pair }
+                                    defend={ defend }
+                                    key={ pair.attack.suit + pair.attack.value }
                                 />
                             ))
                         }
                     </div>
-                    <button onClick={ () => {
-                        if (socket) socket.send(JSON.stringify({ type: 'playerPass' }));
-                    } }>Pass</button>
-                </>
-            }
-        </div>
+                }
+                {
+                    (trump && socket) &&
+                    <div className='DiffContainer'>
+                        <TrumpBadge suit={ trump }/>
+                        <Button onClick={ () => socket ? socket.send(JSON.stringify({ type: 'playerPass' })) : null }>
+                            Pass
+                        </Button>
+                    </div>
+                }
+                {
+                    hand &&
+                    <div className='handContainer'>
+                        {
+                            hand.map((card: card, index: number) => (
+                                <img
+                                    src={ getCardUrl(card) }
+                                    alt={ getCardUrl(card) }
+                                    key={ card.suit + card.value }
+                                    style={ { '--index': index } as React.CSSProperties }
+                                    onClick={ isDefender ? () => setSelectedCard(card) : () => addToAttack(card) }
+                                    className={ `card stacked ${ compareCards(card, selectedCard) ? 'selected' : '' }` }
+                                />
+                            ))
+                        }
+                    </div>
+                }
+                {
+                    (players && playerIndex !== undefined && attackerIndex !== undefined) &&
+                    <Players
+                        players={ players.map((player) =>
+                            player.index === playerIndex
+                            ?   { ...player, name: player.name + '(you)' }
+                            :   player
+                        ) }
+                        attackerIndex={ attackerIndex }
+                        defenderIndex={ (attackerIndex + 1) % players.length }
+                    />
+                }
+            </>
     );
 };
 

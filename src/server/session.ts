@@ -84,7 +84,14 @@ class Session {
     };
 
     addPlayer = (socket: WebSocket, request: IncomingMessage) => {
-        const playerIndex = this.players.push({ cards: [], socket, pass: false }) - 1;
+        const player: Player = {
+            cards: [],
+            socket,
+            pass: false,
+            name: `player-${ this.players.length + 1 }`,
+            index: this.players.length
+        };
+        const playerIndex = this.players.push(player) - 1;
         console.log(`Player ${ request.socket.remoteAddress } has joined the game.`);
         socket.on('message', (stream: Buffer) => this.handlePlayer(socket, stream.toString(), playerIndex));
     };
@@ -92,33 +99,32 @@ class Session {
     handlePlayer = (socket: WebSocket, message: string, playerIndex: number) => {
         const body = JSON.parse(message) as packet;
         switch (body.type) {
-            case 'attack': this.handleAttack(socket, body.card, playerIndex); break;
-            case 'defend': this.handleDefence(socket, body.cards, playerIndex); break;
-            case 'playerPass': this.handlePass(socket, playerIndex); break;
+            case 'attack': this.handleAttack(socket, body.card, this.players[ playerIndex ]); break;
+            case 'defend': this.handleDefence(socket, body.cards, this.players[ playerIndex ]); break;
+            case 'playerPass': this.handlePass(socket, this.players[ playerIndex ]); break;
         };
         this.sendDataToAll();
     };
 
-    handleDefence = (socket: WebSocket, pair: attackDefencePair, playerIndex: number) => {
+    handleDefence = (socket: WebSocket, pair: attackDefencePair, player: Player) => {
         const defenderIndex = (this.currentAttacker  + 1) % this.players.length;
         // check if the player is the defender
         // if they aren't, they cannot defend
-        if (defenderIndex !== playerIndex)
+        if (defenderIndex !== player.index)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if they provided a defence card
         if (!pair.defence)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the player has yielded/passed
         // if they have, they cannot defend
-        if (this.players[ playerIndex ].pass)
+        if (player.pass)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the player has the card 
         // if they don't, they cannot defend with it
         if (
-            !this
-                .players[ playerIndex ]
+            !player
                 .cards
-                    .some((card: card) => card.suit === pair.defence?.suit && card.value === pair.defence?.value)
+                .some((card: card) => card.suit === pair.defence?.suit && card.value === pair.defence?.value)
         )
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid' }));
         // check if the attack card is already defended
@@ -144,54 +150,37 @@ class Session {
                 this.currentAttack[ i ].attack.value === pair.attack.value
             ) {
                 this.currentAttack[ i ].defence = pair.defence;
-                this.players[ playerIndex ].cards =
-                    this
-                        .players[ playerIndex ]
-                        .cards
-                            .filter((c: card) => c.suit !== pair.defence?.suit || c.value !== pair.defence?.value);
+                player.cards = player.cards.filter((c: card) => c.suit !== pair.defence?.suit || c.value !== pair.defence?.value);
                 return socket.send(JSON.stringify({ type: 'serverResponse', response: 'success'}));
             };
         // if the card isn't in the current attack, ignore it
         socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
     };
 
-    handleAttack = (socket: WebSocket, card: card, playerIndex: number) => {
+    handleAttack = (socket: WebSocket, card: card, player: Player) => {
         const defenderIndex = (this.currentAttacker  + 1) % this.players.length;
         // check if the attacker has yielded/passed
         // if they have, they cannot attack
-        console.log(this.players[ playerIndex ].pass)
-        if (this.players[ playerIndex ].pass)
+        if (player.pass)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the defender has enough cards
         // to defend against the attack
         // if not, ignore the card
-        console.log(!hasEnoughCards(this.currentAttack, this.players[ defenderIndex ].cards))
         if (!hasEnoughCards(this.currentAttack, this.players[ defenderIndex ].cards))
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the player has the card 
         // if they don't, they cannot defend with it
-        console.log(
-            !this
-                .players[ playerIndex ]
-                .cards
-                    .some((c: card) => card.suit === c.suit && card.value === c.value))
-        if (
-            !this
-                .players[ playerIndex ]
-                .cards
-                    .some((c: card) => card.suit === c.suit && card.value === c.value)
-        )
+        if (!player.cards.some((c: card) => card.suit === c.suit && card.value === c.value))
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if there are any cards in the current attack
         // if there aren't, check if the player is the attacker
         // if he isn't, then the player cannot attack
-        console.log(this.currentAttack.length === 0 && this.currentAttacker !== playerIndex)
-        if (this.currentAttack.length === 0 && this.currentAttacker !== playerIndex)
+        if (this.currentAttack.length === 0 && this.currentAttacker !== player.index)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the player needs to defend
         // if they do, don't let them attack
-        console.log(this.currentAttack.length > 0 && playerIndex === defenderIndex)
-        if (this.currentAttack.length > 0 && playerIndex === defenderIndex)
+        console.log(this.currentAttack.length > 0 && player.index === defenderIndex)
+        if (this.currentAttack.length > 0 && player.index === defenderIndex)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if there are any attacking cards
         // if there aren't, just accept any card
@@ -200,11 +189,7 @@ class Session {
         console.log(this.currentAttack.length === 0 || attackIncludesValue(this.currentAttack, card.value))
         if (this.currentAttack.length === 0 || attackIncludesValue(this.currentAttack, card.value)) {
             this.currentAttack.push({ attack: card });
-            this.players[ playerIndex ].cards =
-                this
-                    .players[ playerIndex ]
-                    .cards
-                        .filter((c: card) => c.suit !== card.suit || c.value !== card.value);
+            player.cards = player.cards.filter((c: card) => c.suit !== card.suit || c.value !== card.value);
                         console.log('done')
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'success'}));
         };
@@ -213,13 +198,13 @@ class Session {
         socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
     };
 
-    handlePass = (socket: WebSocket, playerIndex: number) => {
+    handlePass = (socket: WebSocket, player: Player) => {
         // check if there are any cards in the current attack
         // if not, the player cannot yield/pass
         if (this.currentAttack.length === 0)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // there is no need to check if the player has passed/yielded already
-        this.players[ playerIndex ].pass = true;
+        player.pass = true;
         this.cyclePlayers();
         return socket.send(JSON.stringify({ type: 'serverResponse', response: 'success'}));
     };
@@ -304,8 +289,12 @@ class Session {
             .send(
                 JSON.stringify({
                     type: 'sessionData',
-                    playerCount: this.players.length,
-                    playerCardCount: this.players.map((player: Player) => player.cards.length),
+                    players: this.players.map((player: Player) => ({
+                        cards: player.cards.length,
+                        pass: player.pass,
+                        name: player.name,
+                        index: player.index
+                    })),
                     trump: this.trump
                 })
             );

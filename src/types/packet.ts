@@ -1,4 +1,7 @@
 import card, { attackDefencePair, cardSuit } from './card';
+import Player from './player';
+
+type safePlayer = Omit<Player, 'socket' | 'cards'> & { cards: number };
 
 type defend = {
     type: 'defend';
@@ -24,8 +27,7 @@ type playerData = {
 
 type sessionData = {
     type: 'sessionData';
-    playerCount: number;
-    playerCardCount: number[];
+    players: safePlayer[];
     trump: cardSuit;
 };
 

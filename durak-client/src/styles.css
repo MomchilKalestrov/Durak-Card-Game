@@ -1,15 +1,87 @@
+:root {
+    --color-primary: #e9ebe1;
+    --color-secondary: #3D4133;
+    --color-tertiary: #494d3d;
+    --color-bg: #36392C;
+    --color-danger: var(--color-primary);
+    --color-disabled: #949494;
+}
+
+body {
+    margin: 0px;
+
+    width: 100vw;
+    height: 100vh;
+    padding: 1rem;
+    background-color: var(--color-bg);
+    box-sizing: border-box;
+
+    font-family: 'Roboto', sans-serif;
+    color: var(--color-primary);
+}
+
+#root {
+    display: grid;
+    place-items: center;
+    grid-template-rows: min-content auto min-content;
+    grid-template-columns: auto min-content;
+    grid-template-areas:
+        'players players'
+        'attack other'
+        'hand hand'
+    ;
+    gap: 1rem;
+
+    width: 100%;
+    height: 100%;
+}
+
+.handContainer {
+    grid-area: hand;
+
+    width: 100%;
+    padding: 2rem 1.5rem;
+    box-sizing: border-box;
+
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 .card {
     width: 5rem;
 }
 
-.attackDefencePair {
-    --top-offset: 2rem;
-    position: relative;
-    padding-bottom: var(--top-offset);
+.card.stacked {
+    z-index: 1;
+    margin: -2rem -1.5rem;
 }
 
-.attackDefencePair *:nth-child(2) {
-    position: absolute;
-    top: var(--top-offset);
-    left: 0px;
+.card.selected {
+    transform: translateY(-1rem);
+}
+
+.DiffContainer {
+    grid-area: other;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ConnectContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+#root:has(.ConnectContainer) {
+    display: block;
 }
