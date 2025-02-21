@@ -42,7 +42,12 @@ type serverResponse = {
     response: 'success' | 'invalid' | 'error';
 };
 
-type packet = attack | defend | currentAttack | playerData | playerReady | playerPass| sessionData | serverResponse;
+type durak = {
+    type: 'durak';
+    durak: string;
+};
 
-export type { attack, defend, currentAttack, playerData, playerReady, playerPass, serverResponse, sessionData };
+type packet = attack | defend | currentAttack | playerData | playerReady | playerPass| sessionData | serverResponse | durak;
+
+export type { attack, defend, currentAttack, playerData, playerReady, playerPass, serverResponse, sessionData, durak };
 export default packet;

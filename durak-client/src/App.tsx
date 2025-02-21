@@ -14,6 +14,7 @@ import card from './lib/types/card';
 
 import './styles.css';
 import Players from './components/players';
+import packet from './lib/types/packet';
 
 const compareCards = (c1?: card, c2?: card) =>
     c1 && c2 && c1.suit === c2.suit && c1.value === c2.value;
@@ -27,12 +28,18 @@ const App: React.FC = () => {
     const { attack, attackerIndex } = useAttack(socket);
     const { players, trump } = useSessionData(socket);
 
+    console.log(socket)
+
     const createConnection = () => {
         const input: string | undefined = inputRef.current?.value;
         if (!input) return;
         const socket = new WebSocket(input);
         socket.addEventListener('open', () => setSocket(socket));
-        socket.addEventListener('message', (e) => console.log(JSON.parse(e.data)));
+        socket.addEventListener('message', (e) => {
+            const data = JSON.parse(e.data) as packet;
+            if (data.type === 'durak') alert(" The game has concluded. The durak is " + data.durak + ".");
+            else console.log(data);
+        });
     };
 
     const addToAttack = (card: card) => {
@@ -44,11 +51,15 @@ const App: React.FC = () => {
             socket.send(JSON.stringify({ type: 'defend', cards: { attack, defence: selectedCard } }));
     };
 
-    var isDefender: boolean = false;
-    if (attackerIndex !== undefined && players?.length !== undefined)
-        isDefender = (attackerIndex + 1) % players?.length === playerIndex;
+    var defenderIndex: number = 0;
+    if (attackerIndex !== undefined && players?.length !== undefined) {
+        defenderIndex = attackerIndex;
 
-    if (!isDefender && selectedCard) setSelectedCard(undefined);
+        do defenderIndex = (defenderIndex + 1) % players.length;
+        while (players[ defenderIndex ].exited);
+    };
+
+    if (defenderIndex !== playerIndex  && selectedCard) setSelectedCard(undefined);
 
     return (
         !socket
@@ -90,7 +101,7 @@ const App: React.FC = () => {
                                     alt={ getCardUrl(card) }
                                     key={ card.suit + card.value }
                                     style={ { '--index': index } as React.CSSProperties }
-                                    onClick={ isDefender ? () => setSelectedCard(card) : () => addToAttack(card) }
+                                    onClick={ defenderIndex === playerIndex ? () => setSelectedCard(card) : () => addToAttack(card) }
                                     className={ `card stacked ${ compareCards(card, selectedCard) ? 'selected' : '' }` }
                                 />
                             ))
@@ -102,11 +113,10 @@ const App: React.FC = () => {
                     <Players
                         players={ players.map((player) =>
                             player.index === playerIndex
-                            ?   { ...player, name: player.name + '(you)' }
+                            ?   { ...player, name: player.name + ' (you)' }
                             :   player
                         ) }
-                        attackerIndex={ attackerIndex }
-                        defenderIndex={ (attackerIndex + 1) % players.length }
+                        { ...{ defenderIndex, attackerIndex } }
                     />
                 }
             </>

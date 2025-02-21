@@ -7,6 +7,7 @@ interface Player {
     socket: WebSocket;
     pass: boolean;
     name: string;
+    exited: boolean;
     index: number;
 };
 

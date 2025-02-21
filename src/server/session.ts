@@ -89,7 +89,8 @@ class Session {
             socket,
             pass: false,
             name: `player-${ this.players.length + 1 }`,
-            index: this.players.length
+            index: this.players.length,
+            exited: false
         };
         const playerIndex = this.players.push(player) - 1;
         console.log(`Player ${ request.socket.remoteAddress } has joined the game.`);
@@ -103,11 +104,18 @@ class Session {
             case 'defend': this.handleDefence(socket, body.cards, this.players[ playerIndex ]); break;
             case 'playerPass': this.handlePass(socket, this.players[ playerIndex ]); break;
         };
+        if(this.endConditionsMet())
+            this.end();
+        this.cyclePlayers();
         this.sendDataToAll();
     };
 
     handleDefence = (socket: WebSocket, pair: attackDefencePair, player: Player) => {
-        const defenderIndex = (this.currentAttacker  + 1) % this.players.length;
+        // get the first player after the attacker that hasn't exited
+        let defenderIndex: number = this.currentAttacker;
+        do defenderIndex = (defenderIndex + 1) % this.players.length;
+        while (this.players[ defenderIndex ].exited);
+        console.log(player.name + ' is defending (calculated defender ' + this.players[ defenderIndex ].name + ')');
         // check if the player is the defender
         // if they aren't, they cannot defend
         if (defenderIndex !== player.index)
@@ -158,7 +166,11 @@ class Session {
     };
 
     handleAttack = (socket: WebSocket, card: card, player: Player) => {
-        const defenderIndex = (this.currentAttacker  + 1) % this.players.length;
+        // get the first player after the attacker that hasn't exited
+        let defenderIndex: number = this.currentAttacker;
+        do defenderIndex = (defenderIndex + 1) % this.players.length;
+        while (this.players[ defenderIndex ].exited);
+        console.log(player.name + ' is attacking ' + this.players[ defenderIndex ].name);
         // check if the attacker has yielded/passed
         // if they have, they cannot attack
         if (player.pass)
@@ -179,21 +191,17 @@ class Session {
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if the player needs to defend
         // if they do, don't let them attack
-        console.log(this.currentAttack.length > 0 && player.index === defenderIndex)
         if (this.currentAttack.length > 0 && player.index === defenderIndex)
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // check if there are any attacking cards
         // if there aren't, just accept any card
         // if there are, check if the card suit
         // is included in the attack.
-        console.log(this.currentAttack.length === 0 || attackIncludesValue(this.currentAttack, card.value))
         if (this.currentAttack.length === 0 || attackIncludesValue(this.currentAttack, card.value)) {
             this.currentAttack.push({ attack: card });
             player.cards = player.cards.filter((c: card) => c.suit !== card.suit || c.value !== card.value);
-                        console.log('done')
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'success'}));
         };
-        console.log('error')
         // if it isn't, ignore it. 
         socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
     };
@@ -205,7 +213,6 @@ class Session {
             return socket.send(JSON.stringify({ type: 'serverResponse', response: 'invalid'}));
         // there is no need to check if the player has passed/yielded already
         player.pass = true;
-        this.cyclePlayers();
         return socket.send(JSON.stringify({ type: 'serverResponse', response: 'success'}));
     };
 
@@ -219,17 +226,17 @@ class Session {
 
     cyclePlayers = () => {
         // check if all players are ready
-        const allPased = this.players.every((player: Player) => player.pass);
+        const allReady = this.players.every((player: Player) => player.pass || player.exited);
+        if (!allReady) return;
+        // if they are, clear their pass status
+        this.players.forEach(player => player.pass = false);
 
-        if (!allPased) return;
-
-        // set pass to false for next round
-        this.players.forEach((player: Player) => player.pass = false);
-
-        // if the defender has failed,
+        // if the defender has failed his task,
         // push the attack cards to him
         // and skip his turn
-        const defenderIndex = (this.currentAttacker  + 1) % this.players.length;
+        let defenderIndex: number = this.currentAttacker;
+        do defenderIndex = (defenderIndex + 1) % this.players.length;
+        while (this.players[ defenderIndex ].exited);
 
         if (this.currentAttack.some((pair: attackDefencePair) => !pair.defence)) {
             this.currentAttack.forEach((pair: attackDefencePair) => {
@@ -237,21 +244,28 @@ class Session {
                     this.players[ defenderIndex ].cards.push(pair.defence);
                 this.players[ defenderIndex ].cards.push(pair.attack);
             });
-            this.currentAttacker = (this.currentAttacker + 1) % this.players.length;
+            
+            do this.currentAttacker = (this.currentAttacker + 1) % this.players.length;
+            while (this.players[ defenderIndex ].exited);
         };
 
+        // clear the attack for the next round
         this.currentAttack = [];
         // the first that needs to draw is the attacker,
         // then anyone else
         // and then the defender
         this.drawCards(this.players[ this.currentAttacker ]);
-        this.players.forEach((_, index: number) => {
-            if (index === this.currentAttacker || index === defenderIndex) return;
-            this.drawCards(this.players[ index ]);
+        this.players.forEach((player: Player) => {
+            if (
+                player.index === this.currentAttacker ||
+                player.index === defenderIndex
+            ) return;
+            this.drawCards(player);
         });
         this.drawCards(this.players[ defenderIndex ]);
         
-        this.currentAttacker = (this.currentAttacker + 1) % this.players.length;
+        do this.currentAttacker = (this.currentAttacker + 1) % this.players.length;
+        while (this.players[ this.currentAttacker ].exited);
     };
 
     sendDataToAll = () =>
@@ -261,51 +275,80 @@ class Session {
             this.sendSessionData(player);
         });
 
-    sendPlayerData = (player: Player, playerIndex: number) =>
-        player
-        .socket
-            .send(
-                JSON.stringify({
-                    type: 'playerData',
-                    hand: player.cards,
-                    playerIndex
-                })
-            );
+    sendPlayerData = (player: Player, playerIndex: number) => {
+        const packet: packet = {
+            type: 'playerData',
+            hand: player.cards,
+            playerIndex
+        };
+        player.socket.send(JSON.stringify(packet));
+    };
 
-    sendAttackData = (player: Player) =>
-        player
-        .socket
-            .send(
-                JSON.stringify({
-                    type: 'currentAttack',
-                    cards: this.currentAttack,
-                    attackerIndex: this.currentAttacker
-                })
-            );
+    sendAttackData = (player: Player) => {
+        const packet: packet = {
+            type: 'currentAttack',
+            cards: this.currentAttack,
+            attackerIndex: this.currentAttacker
+        };
 
-    sendSessionData = (player: Player) => 
-        player
-        .socket
-            .send(
-                JSON.stringify({
-                    type: 'sessionData',
-                    players: this.players.map((player: Player) => ({
-                        cards: player.cards.length,
-                        pass: player.pass,
-                        name: player.name,
-                        index: player.index
-                    })),
-                    trump: this.trump
-                })
-            );
+        player.socket.send(JSON.stringify(packet));
+    };
 
-    begin = async () => {
+    sendSessionData = (player: Player) => {
+        const packet: packet = {
+            type: 'sessionData',
+            players: this.players.map((player: Player) => {
+                const cloned = { ...player, cards: player.cards.length, socket: undefined };
+                delete cloned.socket;
+                return cloned;
+            }),
+            trump: this.trump
+        };
+        player.socket.send(JSON.stringify(packet));
+    };
+
+    begin = () => {
         console.log('Session started. Press any key to begin:');
         rl.question('', () => {
             console.log('Giving out cards...');
             this.giveCards();
             console.log('Cards given out.');
         });
+    };
+
+    endConditionsMet = (): boolean => {
+        let exitedPlayers: number = 0;
+        const deckIsEmpty = this.deck.cards.length === 0;
+        this.players.forEach(player => {
+            if (player.cards.length === 0 && deckIsEmpty) player.exited = true;
+            if (player.cards.length === 0 && deckIsEmpty) console.log(player.name + ' has exited.');
+            if (player.exited) exitedPlayers++;
+        });
+        return exitedPlayers >= this.players.length - 1;
+    };
+
+    getLoser = (): Player | undefined => {
+        for (let i: number = 0; i < this.players.length; i++)
+            if (!this.players[ i ].exited) return this.players[ i ];
+        return;
+    };
+
+    end = () => {
+        console.log('The session has ended.');
+        const loser = this.getLoser();
+        if (loser) console.log(`The loser is ${ loser.name }.`);
+        else return;
+
+        const packet: packet = {
+            type: 'durak',
+            durak: loser.name
+        };
+
+        this.players.forEach(player => {
+            player.socket.send(JSON.stringify(packet));
+            player.socket.close();
+        });
+        process.exit(0);
     };
 };
 
